@@ -10,6 +10,6 @@ namespace ToDoApiList.Models
 
         public DateTime? CompletedDate { get; set; } 
 
-        public string Discription { get; set; } 
+        public required string Discription { get; set; } 
     }
 }
