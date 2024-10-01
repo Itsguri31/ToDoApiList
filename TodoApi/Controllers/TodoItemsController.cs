@@ -1,32 +1,108 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TodoApiList.Data;
+using ToDoApiList.Models;
 
-namespace TodoApi.Controllers;
-
-[ApiController]
-[Route("[controller]")]
-public class WeatherForecastController : ControllerBase
+namespace TodoApiList.Controllers
 {
-    private static readonly string[] Summaries = new[]
+    [Route("api/[controller]")]
+    [ApiController]
+    public class TodoItemsController : ControllerBase
     {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
+        private readonly DataContext _context;
 
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-    }
-
-    [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
-    {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        public TodoItemsController(DataContext context)
         {
-            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+            _context = context;
+        }
+
+        // GET: api/TodoItems
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
+        {
+            return await _context.TodoItems.Where(item => item.CompletedDate == null).ToListAsync();
+        }
+
+        // GET: api/TodoItems/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<TodoItem>> GetToDoItem(int id)
+        {
+            var toDoItem = await _context.TodoItems.FindAsync(id);
+
+            if (toDoItem == null)
+            {
+                return NotFound();
+            }
+
+            return toDoItem;
+        }
+
+        // PUT: api/TodoItems/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutToDoItem(int id, TodoItem toDoItem)
+        {
+            if (id != toDoItem.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(toDoItem).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ToDoItemExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // POST: api/TodoItems
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<TodoItem>> PostToDoItem(TodoItem toDoItem)
+        {
+            _context.TodoItems.Add(toDoItem);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetToDoItem", new { id = toDoItem.Id }, toDoItem);
+        }
+
+        // DELETE: api/TodoItems/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteToDoItem(int id)
+        {
+            var toDoItem = await _context.TodoItems.FindAsync(id);
+            if (toDoItem == null)
+            {
+                return NotFound();
+            }
+
+            _context.TodoItems.Remove(toDoItem);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private bool ToDoItemExists(int id)
+        {
+            return _context.TodoItems.Any(e => e.Id == id);
+        }
     }
 }
