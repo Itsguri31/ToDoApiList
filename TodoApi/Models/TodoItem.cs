@@ -1,8 +1,8 @@
 using System;
 
-namespace TodoApiList.Models
+namespace ToDoApiList.Models
 {
-    public class ToDoItem
+    public class TodoItem
     {
         public int Id { get; set; } 
 
@@ -10,6 +10,6 @@ namespace TodoApiList.Models
 
         public DateTime? CompletedDate { get; set; } 
 
-        public string Description { get; set; } 
+        public string Discription { get; set; } 
     }
 }
